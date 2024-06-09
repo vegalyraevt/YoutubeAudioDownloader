@@ -1,0 +1,6 @@
+rips/
+dist/
+build/
+.venv/
+vid.spec
+.gitignore
