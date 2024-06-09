@@ -6,3 +6,6 @@ You can also easily change the save location in the program for your audio rips.
 
 Program is free use under the GPL v3 but if you want to support me for it check out my kofi.
 You can also find other programs on my kofi I make or comission one of your own.
+
+Download the main releases as a stand alone exe here:
+https://github.com/vegalyraevt/YoutubeAudioDownloader/releases/tag/main
