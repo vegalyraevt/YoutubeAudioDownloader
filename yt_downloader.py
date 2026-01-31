@@ -315,6 +315,9 @@ def main():
 
     args = parser.parse_args()
 
+    # Seed random for consistent randomness across runs
+    random.seed(time.time())
+
     # Determine Output Path
     output_path = args.output or os.getcwd()
     if args.warudo:
