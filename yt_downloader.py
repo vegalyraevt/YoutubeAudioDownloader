@@ -340,28 +340,10 @@ def main():
     for url in args.url:
         master_queue.extend(get_video_urls(url))
 
-    # Load download archive for skipping
-    downloaded_ids = set()
-    if args.download_archive and os.path.exists(args.download_archive):
-        with open(args.download_archive, 'r', encoding='utf-8') as f:
-            downloaded_ids = set(line.strip() for line in f)
-
     # Loop through all videos (Batching with manual sleep after download)
     for i, link in enumerate(master_queue):
         print(f"\nProcessing: {link}")
         
-        # Check if already downloaded (optimization)
-        try:
-            ydl_opts_check = {'quiet': True, 'no_warnings': True}
-            with YoutubeDL(cast(Any, ydl_opts_check)) as ydl:
-                info = ydl.extract_info(link, download=False)
-                video_id = info.get('id')
-                if video_id and video_id in downloaded_ids:
-                    print(f"[SKIP] Video ID {video_id} already in archive")
-                    continue
-        except Exception:
-            pass  # Proceed if we can't check
-
         # Download the video
         download_youtube_video(
             link,
