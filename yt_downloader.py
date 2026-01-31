@@ -272,8 +272,8 @@ def convert_local_file_to_wav(input_file, output_path=None, ffmpeg_path=None):
 def main():
     parser = argparse.ArgumentParser(description='YouTube Audio/Video Downloader')
     
-    # URL Argument: 'nargs='+' allows multiple links
-    parser.add_argument('url', nargs='+', help='YouTube video URL(s)')
+    # URL Argument: Changed to '*' so it is OPTIONAL (allows running --local without a URL)
+    parser.add_argument('url', nargs='*', help='YouTube video URL(s)')
     
     # Mode Arguments
     parser.add_argument('--local', metavar='FILE', help='Convert local file to WAV')
@@ -308,7 +308,7 @@ def main():
 
     # 2. YouTube Download Mode
     if not args.url:
-        print("Error: No URL provided.")
+        print("Error: No URL provided. Please provide a URL or use --local.")
         sys.exit(1)
 
     # Determine Audio Format
