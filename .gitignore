@@ -1,0 +1,5 @@
+output/
+.venv/
+.venv_old_python313/
+ffmpeg/
+csvs/

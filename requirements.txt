@@ -1,0 +1,6 @@
+yt-dlp>=2023.3.4
+ffmpeg-python>=0.2.0
+
+# Audio to MIDI conversion (optional - install if using audio_to_midi.py)
+# basic-pitch
+# tf-keras
