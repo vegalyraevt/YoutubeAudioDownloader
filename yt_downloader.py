@@ -268,21 +268,22 @@ def download_youtube_video(url, output_path=None, audio_format=None, ffmpeg_path
         })
         if ffmpeg_path:
             ydl_opts['ffmpeg_location'] = ffmpeg_path
-    else:
-        ydl_opts['format'] = 'bestvideo[height=1080][fps=60]+bestaudio/best[height=1080][fps=60]/best'
+    """
+    Download a YouTube video at 1080p 60fps or as WAV/MP3 audio.
     
-    # Retry logic for YouTube's SSAP and signature extraction issues
-    max_retries = 3
-    for attempt in range(1, max_retries + 1):
-        # Check if this video is already downloaded (by ID)
-        # Only works for single video, not playlist at this call level
-        if download_archive:
-            # Try to extract video ID from URL
-            import re
-            id_match = re.search(r'(?:v=|be/|embed/|shorts/|list=)?([\w-]{11})', url)
-            video_id = None
-            if id_match:
-                video_id = id_match.group(1)
+    Args:
+        url: YouTube video URL
+        output_path: Optional path to save the video (default: current directory)
+        audio_format: 'wav', 'mp3', or None
+        ffmpeg_path: Optional path to ffmpeg executable or directory
+        auto_download_ffmpeg: If True, automatically download ffmpeg if not found
+    
+    # Determine if we want to extract audio only
+    audio_only = audio_format in ('wav', 'mp3')
+    wav_only = audio_format == 'wav'
+    mp3_only = audio_format == 'mp3'
+    # Check for FFmpeg if WAV conversion is requested
+    if wav_only:
             # If video_id is in archive, skip
             if video_id and video_id in downloaded_ids:
                 print(f"[SKIP] Video ID {video_id} already in archive {download_archive}")
@@ -548,21 +549,23 @@ Examples:
         audio_format = 'mp3'
 
     # Pass delay options
-    success = download_youtube_video(
-        args.url,
-        output_path,
-        audio_format=audio_format,
-        ffmpeg_path=args.ffmpeg_path,
-        delay=args.delay,
-        max_delay=args.max_delay,
-        download_archive=args.download_archive,
-        best_native=args.best_native,
-        output_template=args.output_template,
-        ignore_errors=args.ignore_errors
-    )
-    
-    # Exit with appropriate status code
-    sys.exit(0 if success else 1)
+    all_success = True
+    for url in args.url:
+        success = download_youtube_video(
+            url,
+            output_path,
+            audio_format=audio_format,
+            ffmpeg_path=args.ffmpeg_path,
+            delay=args.delay,
+            max_delay=args.max_delay,
+            download_archive=args.download_archive,
+            best_native=args.best_native,
+            output_template=args.output_template,
+            ignore_errors=args.ignore_errors
+        )
+        if not success:
+            all_success = False
+    sys.exit(0 if all_success else 1)
 
 if __name__ == '__main__':
     main()
