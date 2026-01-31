@@ -6,6 +6,7 @@ import zipfile
 import urllib.request
 import time
 import subprocess
+import random
 from pathlib import Path
 from typing import Any, cast
 from yt_dlp import YoutubeDL
@@ -21,6 +22,27 @@ except ImportError:
     HAS_MUTAGEN = False
     print("[WARN] 'mutagen' library not found. Metadata tagging will be disabled.")
     print("       Install it with: pip install mutagen")
+
+def get_video_urls(url):
+    """Extract individual video URLs from a playlist or return the URL if single video."""
+    try:
+        ydl_opts = {
+            'extract_flat': True,
+            'quiet': True,
+            'no_warnings': True,
+            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+        }
+        with YoutubeDL(cast(Any, ydl_opts)) as ydl:
+            info = ydl.extract_info(url, download=False)
+            if 'entries' in info:
+                # It's a playlist, return all video URLs
+                return [entry['url'] for entry in info['entries'] if 'url' in entry]
+            else:
+                # Single video
+                return [url]
+    except Exception:
+        # If extraction fails, assume it's a single video
+        return [url]
 
 def tag_audio_metadata(filepath, info, audio_format):
     """Tag MP3 or WAV file with metadata from info dict."""
@@ -126,9 +148,8 @@ def download_ffmpeg():
         return None
 
 def download_youtube_video(url, output_path=None, audio_format=None, ffmpeg_path=None, 
-                         auto_download_ffmpeg=True, delay=None, max_delay=None, 
-                         download_archive=None, best_native=False, output_template=None, 
-                         ignore_errors=False, list_formats=False):
+                         auto_download_ffmpeg=True, download_archive=None, best_native=False, 
+                         output_template=None, ignore_errors=False, list_formats=False):
     
     # 1. Handle List Formats
     if list_formats:
@@ -179,8 +200,6 @@ def download_youtube_video(url, output_path=None, audio_format=None, ffmpeg_path
     }
 
     # Add advanced options
-    if delay is not None: ydl_opts['sleep_interval'] = delay
-    if max_delay is not None: ydl_opts['max_sleep_interval'] = max_delay
     if download_archive: ydl_opts['download_archive'] = download_archive
     if ffmpeg_path: ydl_opts['ffmpeg_location'] = ffmpeg_path
 
@@ -316,22 +335,51 @@ def main():
     if args.wav: audio_fmt = 'wav'
     elif args.mp3: audio_fmt = 'mp3'
 
-    # Loop through all provided URLs (Batching)
-    for link in args.url:
+    # Flatten playlists into individual video URLs
+    master_queue = []
+    for url in args.url:
+        master_queue.extend(get_video_urls(url))
+
+    # Load download archive for skipping
+    downloaded_ids = set()
+    if args.download_archive and os.path.exists(args.download_archive):
+        with open(args.download_archive, 'r', encoding='utf-8') as f:
+            downloaded_ids = set(line.strip() for line in f)
+
+    # Loop through all videos (Batching with manual sleep after download)
+    for i, link in enumerate(master_queue):
         print(f"\nProcessing: {link}")
+        
+        # Check if already downloaded (optimization)
+        try:
+            ydl_opts_check = {'quiet': True, 'no_warnings': True}
+            with YoutubeDL(cast(Any, ydl_opts_check)) as ydl:
+                info = ydl.extract_info(link, download=False)
+                video_id = info.get('id')
+                if video_id and video_id in downloaded_ids:
+                    print(f"[SKIP] Video ID {video_id} already in archive")
+                    continue
+        except Exception:
+            pass  # Proceed if we can't check
+
+        # Download the video
         download_youtube_video(
             link,
             output_path=output_path,
             audio_format=audio_fmt,
             ffmpeg_path=args.ffmpeg_path,
-            delay=args.delay,
-            max_delay=args.max_delay,
             download_archive=args.download_archive,
             best_native=args.best_native,
             output_template=args.output_template,
             ignore_errors=args.ignore_errors,
             list_formats=args.list_formats
         )
+
+        # Sleep after download (if not the last item and delay is set)
+        if i < len(master_queue) - 1 and args.delay is not None:
+            sleep_time = random.randint(args.delay, args.max_delay) if args.max_delay else args.delay
+            print(f"Sleeping for {sleep_time} seconds...")
+            time.sleep(sleep_time)
 
 if __name__ == '__main__':
     main()
