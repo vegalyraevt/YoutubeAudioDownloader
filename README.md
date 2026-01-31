@@ -28,7 +28,8 @@ FFmpeg is automatically downloaded when you first run `yt_downloader.py` with `-
 
 ## 🎵 YouTube Downloader (`yt_downloader.py`)
 
-Download YouTube videos or extract audio as WAV files.
+
+Download YouTube videos or extract audio as WAV, MP3, or native formats. Now supports advanced features for large-scale, robust, and organized downloads.
 
 ### Basic Usage
 
@@ -54,6 +55,27 @@ python yt_downloader.py "https://www.youtube.com/watch?v=VIDEO_ID" --wav --warud
 ```powershell
 # Specify FFmpeg location (if not in PATH)
 python yt_downloader.py "URL" --wav --ffmpeg-path "C:\ffmpeg\bin"
+ 
+# Download audio as MP3 at CD quality
+python yt_downloader.py "URL" --mp3
+
+# Download best native audio format (no transcoding, preserves Opus/AAC)
+python yt_downloader.py "URL" --best-native
+
+# Add a delay between downloads (for playlists)
+python yt_downloader.py "PLAYLIST_URL" --wav --delay 5 --max-delay 15
+
+# Use a download archive to skip already-downloaded videos
+python yt_downloader.py "PLAYLIST_URL" --wav --download-archive archive.txt
+
+# Custom output file naming template
+python yt_downloader.py "URL" --wav --output-template "%(uploader)s - %(title)s.%(ext)s"
+
+# Ignore errors and continue downloading
+python yt_downloader.py "PLAYLIST_URL" --wav --ignore-errors
+
+# List all available formats for a video
+python yt_downloader.py "URL" --list-formats
 ```
 
 ### Features
@@ -61,8 +83,14 @@ python yt_downloader.py "URL" --wav --ffmpeg-path "C:\ffmpeg\bin"
 ✅ **Auto-retry logic** - Retries up to 3 times on YouTube blocking  
 ✅ **Auto-FFmpeg download** - First-time download and setup  
 ✅ **1080p 60fps** - High quality video downloads  
-✅ **WAV audio extraction** - Perfect for MIDI conversion  
-✅ **Smart error handling** - Clear error messages and solutions
+✅ **WAV/MP3/native audio extraction** - Choose your preferred format  
+✅ **Robust metadata tagging** - Title, artist, album, and thumbnail embedded in MP3/WAV  
+✅ **Download archive** - Skips already-downloaded videos for massive playlists  
+✅ **Delay between downloads** - Prevents IP bans on large playlists  
+✅ **Custom output templates** - Advanced file naming for organization  
+✅ **Native format preservation** - No transcoding with --best-native  
+✅ **Error resilience** - Continue on errors, strict cleanup of temp files  
+✅ **Interactive format selection** - List all available formats if a download fails
 
 ---
 
